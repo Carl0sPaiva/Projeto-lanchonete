@@ -1,75 +1,84 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Administração - Lanchonete IFTO</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administração - Lanchonete IFTO</title>
+    <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
-  <header class="cabecalho">
-    <div class="logo-area">
-      <img src="imagens/logo.png" alt="Logo IFTO">
-      <span>Painel Administrativo</span>
-    </div>
-    <button id="btnSairAdmin" class="btn-sair">Sair</button>
-  </header>
-
-  <main class="conteudo">
-    <nav class="abas-admin">
-      <button class="aba-btn ativa" id="abaProdutos">Produtos</button>
-      <button class="aba-btn" id="abaPedidos">Pedidos & Reservas</button>
-    </nav>
-
-    <!-- Painel Produtos -->
-    <section id="secaoProdutos" class="painel-admin">
-      <div class="topo-secao">
-        <h2>Gerenciar Produtos</h2>
-        <button id="btnNovoProduto" class="btn-principal">+ Cadastrar Produto</button>
-      </div>
-      <div id="tabelaProdutos" class="lista-admin"></div>
-    </section>
-
-    <!-- Painel Pedidos -->
-    <section id="secaoPedidos" class="painel-admin escondido">
-      <h2>Pedidos Recebidos</h2>
-      <div id="listaPedidos" class="lista-admin"></div>
-    </section>
-  </main>
-
-  <!-- Modal Cadastrar/Editar Produto -->
-  <div id="modalProduto" class="carrinho-modal escondido">
-    <div class="carrinho-conteudo">
-      <div class="carrinho-topo">
-        <h3 id="tituloModal">Novo Produto</h3>
-        <button id="btnFecharModal" class="btn-fechar">X</button>
-      </div>
-
-      <form id="formProduto">
-        <input type="hidden" id="prodId">
-
-        <label for="prodNome">Nome do Item</label>
-        <input type="text" id="prodNome" required>
-
-        <label for="prodCategoria">Categoria</label>
-        <select id="prodCategoria" required>
-          <option value="Comida">Salgados & Lanches</option>
-          <option value="Bebida">Bebidas</option>
-          <option value="Doces">Doces</option>
-        </select>
-
-        <label for="prodPreco">Preço (R$)</label>
-        <input type="number" id="prodPreco" step="0.05" min="0" required>
-
-        <div class="checkbox-area">
-          <label><input type="checkbox" id="prodDisponivel" checked> Item disponível para venda</label>
+    <header class="cabecalho">
+        <div class="logo-area">
+            <img src="imagens/logo.png" alt="Logo IFTO">
+            <span>Painel Administrativo</span>
         </div>
+        <button id="btnSairAdmin" class="btn-sair">Sair</button>
+    </header>
 
-        <button type="submit" class="btn-principal">Salvar Produto</button>
-      </form>
+    <main class="conteudo">
+        <nav class="abas-admin">
+            <button class="aba-btn ativa" id="abaProdutos">Produtos</button>
+            <button class="aba-btn" id="abaPedidos">Pedidos & Reservas</button>
+        </nav>
+
+        <section id="secaoProdutos" class="painel-admin">
+            <div class="topo-secao">
+                <h2>Gerenciar Produtos</h2>
+                <button id="btnNovoProduto" class="btn-principal">+ Cadastrar Produto</button>
+            </div>
+            <div id="tabelaProdutos" class="lista-admin"></div>
+        </section>
+
+        
+        <section id="secaoPedidos" class="painel-admin escondido">
+            <h2>Pedidos Recebidos</h2>
+            <div id="listaPedidos" class="lista-admin"></div>
+        </section>
+    </main>
+
+   
+    <div id="modalProduto" class="carrinho-modal escondido">
+        <div class="carrinho-conteudo">
+            <div class="carrinho-topo">
+                <h3 id="tituloModal">Novo Produto</h3>
+                <button id="btnFecharModal" class="btn-fechar">X</button>
+            </div>
+
+            <form id="formProduto">
+                <input type="hidden" id="prodId">
+
+                <label for="prodNome">Nome do Item</label>
+                <input type="text" id="prodNome" required>
+
+                <label for="prodCategoria">Categoria</label>
+                <select id="prodCategoria" required>
+                    <option value="Salgados & Lanches">Salgados & Lanches</option>
+                    <option value="Bebidas">Bebidas</option>
+                    <option value="Doces">Doces</option>
+                </select>
+
+                <label for="prodPreco">Preço (R$)</label>
+                <input type="number" id="prodPreco" step="0.05" min="0" required>
+
+                <label for="prodImagem">Imagem do Produto</label>
+                <input type="file" id="prodImagem" accept="image/*">
+
+                <div id="previewContainer" style="margin-bottom: 10px; display: none;">
+                    <img id="prodImagemPreview" src="" alt="Preview" style="max-width: 100%; max-height: 120px; border-radius: 6px; object-fit: cover;">
+                </div>
+
+                <div class="checkbox-area">
+                    <label><input type="checkbox" id="prodDisponivel" checked> Item disponível para venda</label>
+                </div>
+
+                <button type="submit" class="btn-principal">Salvar Produto</button>
+            </form>
+        </div>
     </div>
-  </div>
 
-  <script src="admin.js"></script>
+    <script src="admin.js"></script>
 </body>
+
 </html>
