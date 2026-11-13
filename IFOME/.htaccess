@@ -1,4 +1,0 @@
-Options -Indexes
-<FilesMatch "^(README\.txt|IFOME\.sql|config\.ini)$">
-    Require all denied
-</FilesMatch>
