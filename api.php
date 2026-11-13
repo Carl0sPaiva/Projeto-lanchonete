@@ -49,7 +49,6 @@ function administrador(): array {
 
 try {
     if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') resposta(['erro' => 'Metodo nao permitido.'], 405);
-    // Bloqueia requisicoes cross-site quando o navegador envia Origin.
     if (!empty($_SERVER['HTTP_ORIGIN'])) {
         $origem = parse_url($_SERVER['HTTP_ORIGIN']);
         $host = explode(':', $_SERVER['HTTP_HOST'] ?? '')[0];
@@ -144,7 +143,20 @@ try {
 
         case 'produto_excluir':
             administrador();
-            (new Produto($pdo))->excluir((int)($dados['id'] ?? 0));
+            $idProduto = (int)($dados['id'] ?? 0);
+            
+            $pdo->beginTransaction();
+            $stmtItens = $pdo->prepare('DELETE FROM itens_reserva WHERE id_produto = ?');
+            $stmtItens->execute([$idProduto]);
+            
+            try {
+                (new Produto($pdo))->excluir($idProduto);
+                $pdo->commit();
+            } catch (Throwable $e) {
+                $pdo->rollBack();
+                throw $e;
+            }
+            
             resposta(['sucesso' => true]);
 
         case 'reserva_criar':
