@@ -1,25 +1,183 @@
-let produtos=[]; let carrinho=[]; let categoriaAtiva='Todos';
-async function api(acao,dados={},metodo='POST'){
- const opt={method:metodo,headers:{'Content-Type':'application/json'}}; if(metodo!=='GET')opt.body=JSON.stringify(dados);
- const r=await fetch(`api.php?acao=${acao}`,opt); const j=await r.json(); if(!r.ok)throw new Error(j.erro||'Erro na operação.');return j;
+const produtosIniciais = [
+    { id: 1, nome: "Salgado Assado", categoria: "Salgados & Lanches", preco: 5.50, disponivel: true, imagem: null },
+    { id: 2, nome: "Coxinha de Frango", categoria: "Salgados & Lanches", preco: 6.00, disponivel: true, imagem: null },
+    { id: 3, nome: "Pão de Queijo", categoria: "Salgados & Lanches", preco: 3.50, disponivel: true, imagem: null },
+    { id: 4, nome: "Refrigerante Lata", categoria: "Bebidas", preco: 5.00, disponivel: true, imagem: null },
+    { id: 5, nome: "Suco Natural (300ml)", categoria: "Bebidas", preco: 4.50, disponivel: true, imagem: null },
+    { id: 6, nome: "Café Expresso", categoria: "Bebidas", preco: 2.50, disponivel: true, imagem: null },
+    { id: 7, nome: "Brigadeiro", categoria: "Doces", preco: 2.00, disponivel: true, imagem: null },
+    { id: 8, nome: "Bolo de Pote", categoria: "Doces", preco: 6.50, disponivel: true, imagem: null }
+];
+
+let carrinho = JSON.parse(localStorage.getItem('carrinhoLanchonete')) || [];
+let categoriaAtiva = 'Todos';
+
+function carregarProdutos() {
+    let produtos = JSON.parse(localStorage.getItem('produtosLanchonete'));
+
+    if (!produtos) {
+        produtos = produtosIniciais;
+        localStorage.setItem('produtosLanchonete', JSON.stringify(produtos));
+    }
+
+    const grid = document.getElementById('listaProdutos');
+    grid.innerHTML = '';
+
+    const filtrados = categoriaAtiva === 'Todos' ?
+        produtos :
+        produtos.filter(p => p.categoria === categoriaAtiva);
+
+    if (filtrados.length === 0) {
+        grid.innerHTML = '<p class="vazio">Nenhum produto encontrado nesta categoria.</p>';
+        return;
+    }
+
+    filtrados.forEach(prod => {
+        const card = document.createElement('div');
+        card.className = 'card-produto';
+        card.innerHTML = `
+      ${prod.imagem ? `<img src="${prod.imagem}" alt="${prod.nome}" class="img-produto">` : ''}
+      <h3>${prod.nome}</h3>
+      <p class="categoria">${prod.categoria}</p>
+      <p class="preco">R$ ${prod.preco.toFixed(2).replace('.', ',')}</p>
+      ${prod.disponivel 
+        ? `<button onclick="adicionarAoCarrinho(${prod.id})" class="btn-add">+ Adicionar</button>` 
+        : `<span class="indisponivel">Indisponível</span>`}
+    `;
+        grid.appendChild(card);
+    });
 }
-function moeda(v){return Number(v).toFixed(2).replace('.',',');}
-async function carregarProdutos(){
- try{produtos=await api('produtos_listar');const grid=document.getElementById('listaProdutos');grid.innerHTML='';
- const filtrados=categoriaAtiva==='Todos'?produtos:produtos.filter(p=>p.categoria===categoriaAtiva);
- if(!filtrados.length){grid.innerHTML='<p class="vazio">Nenhum produto encontrado nesta categoria.</p>';return;}
- filtrados.forEach(p=>{const card=document.createElement('div');card.className='card-produto';card.innerHTML=`<h3>${esc(p.nome)}</h3><p class="categoria">${esc(p.categoria)}</p><p class="preco">R$ ${moeda(p.preco)}</p>${Number(p.quantidade_estoque)>0?`<button class="btn-add" onclick="adicionarAoCarrinho(${p.id})">+ Adicionar</button>`:'<span class="indisponivel">Indisponível</span>'}`;grid.appendChild(card);});
- }catch(e){alert(e.message);}
+
+function adicionarAoCarrinho(id) {
+    const produtos = JSON.parse(localStorage.getItem('produtosLanchonete')) || [];
+    const prod = produtos.find(p => p.id == id);
+
+    if (!prod) return;
+
+    const itemExistente = carrinho.find(item => item.id == id);
+    if (itemExistente) {
+        itemExistente.qtd++;
+    } else {
+        carrinho.push({ id: prod.id, nome: prod.nome, preco: prod.preco, qtd: 1 });
+    }
+
+    atualizarCarrinho();
 }
-function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-function adicionarAoCarrinho(id){const p=produtos.find(x=>x.id===id);if(!p)return;const item=carrinho.find(x=>x.id===id);if(item)item.qtd++;else carrinho.push({id:p.id,nome:p.nome,preco:Number(p.preco),qtd:1});atualizarCarrinho();}
-function alterarQtd(id,delta){const i=carrinho.find(x=>x.id===id);if(!i)return;i.qtd+=delta;if(i.qtd<=0)carrinho=carrinho.filter(x=>x.id!==id);atualizarCarrinho();}
-function atualizarCarrinho(){const container=document.getElementById('itensCarrinho');const qtd=carrinho.reduce((a,x)=>a+x.qtd,0);const total=carrinho.reduce((a,x)=>a+x.preco*x.qtd,0);document.getElementById('qtdCarrinho').textContent=qtd;document.getElementById('valorTotal').textContent=`R$ ${moeda(total)}`;container.innerHTML='';if(!carrinho.length){container.innerHTML='<p class="vazio">Seu carrinho está vazio.</p>';return;}
- carrinho.forEach(i=>{const d=document.createElement('div');d.className='item-carrinho';d.innerHTML=`<div><strong>${esc(i.nome)}</strong><br><small>R$ ${moeda(i.preco)} un.</small></div><div class="qtd-controles"><button onclick="alterarQtd(${i.id},-1)">-</button><span>${i.qtd}</span><button onclick="alterarQtd(${i.id},1)">+</button></div>`;container.appendChild(d);});}
-document.querySelectorAll('.btn-filtro').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.btn-filtro').forEach(x=>x.classList.remove('ativo'));b.classList.add('ativo');categoriaAtiva=b.dataset.cat;carregarProdutos();}));
-document.getElementById('btnCarrinho').addEventListener('click',()=>document.getElementById('painelCarrinho').classList.remove('escondido'));
-document.getElementById('btnFecharCarrinho').addEventListener('click',()=>document.getElementById('painelCarrinho').classList.add('escondido'));
-document.querySelectorAll('input[name="tipoPedido"]').forEach(r=>r.addEventListener('change',function(){document.getElementById('campoPagamento').style.display=this.value==='Compra'?'block':'none';}));
-document.getElementById('formCheckout').addEventListener('submit',async e=>{e.preventDefault();if(!carrinho.length){alert('Adicione ao menos um item ao carrinho!');return;}try{const tipo=document.querySelector('input[name="tipoPedido"]:checked').value;await api('reserva_criar',{itens:carrinho.map(i=>({id:i.id,qtd:i.qtd})),tipo,horario:document.getElementById('horarioRetirada').value,pagamento:tipo==='Compra'?document.getElementById('formaPagamento').value:'Dinheiro'});carrinho=[];atualizarCarrinho();document.getElementById('painelCarrinho').classList.add('escondido');alert('Pedido/reserva enviado com sucesso!');await carregarProdutos();}catch(err){alert(err.message);}});
-document.getElementById('btnSair').addEventListener('click',async()=>{try{await api('sair');location.href='index.php';}catch(e){alert(e.message);}});
-carregarProdutos();atualizarCarrinho();
+
+function alterarQtd(id, delta) {
+    const item = carrinho.find(i => i.id == id);
+    if (!item) return;
+
+    item.qtd += delta;
+    if (item.qtd <= 0) {
+        carrinho = carrinho.filter(i => i.id != id);
+    }
+
+    atualizarCarrinho();
+}
+
+function atualizarCarrinho() {
+    localStorage.setItem('carrinhoLanchonete', JSON.stringify(carrinho));
+
+    const container = document.getElementById('itensCarrinho');
+    const qtdTotalEl = document.getElementById('qtdCarrinho');
+    const totalEl = document.getElementById('valorTotal');
+
+    const totalItens = carrinho.reduce((acc, cur) => acc + cur.qtd, 0);
+    const valorTotal = carrinho.reduce((acc, cur) => acc + (cur.preco * cur.qtd), 0);
+
+    qtdTotalEl.textContent = totalItens;
+    totalEl.textContent = `R$ ${valorTotal.toFixed(2).replace('.', ',')}`;
+
+    container.innerHTML = '';
+
+    if (carrinho.length === 0) {
+        container.innerHTML = '<p class="vazio">Seu carrinho está vazio.</p>';
+        return;
+    }
+
+    carrinho.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'item-carrinho';
+        div.innerHTML = `
+      <div>
+        <strong>${item.nome}</strong>
+        <br><small>R$ ${item.preco.toFixed(2).replace('.', ',')} un.</small>
+      </div>
+      <div class="qtd-controles">
+        <button onclick="alterarQtd(${item.id}, -1)">-</button>
+        <span>${item.qtd}</span>
+        <button onclick="alterarQtd(${item.id}, 1)">+</button>
+      </div>
+    `;
+        container.appendChild(div);
+    });
+}
+
+document.querySelectorAll('.btn-filtro').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.querySelectorAll('.btn-filtro').forEach(b => b.classList.remove('ativo'));
+        this.classList.add('ativo');
+        categoriaAtiva = this.dataset.cat;
+        carregarProdutos();
+    });
+});
+
+document.getElementById('btnCarrinho').addEventListener('click', () => {
+    document.getElementById('painelCarrinho').classList.remove('escondido');
+});
+
+document.getElementById('btnFecharCarrinho').addEventListener('click', () => {
+    document.getElementById('painelCarrinho').classList.add('escondido');
+});
+
+document.querySelectorAll('input[name="tipoPedido"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        const campo = document.getElementById('campoPagamento');
+        campo.style.display = this.value === 'Compra' ? 'block' : 'none';
+    });
+});
+
+document.getElementById('formCheckout').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    if (carrinho.length === 0) {
+        alert('Adicione ao menos um item ao carrinho!');
+        return;
+    }
+
+    const usuarioLogado = JSON.parse(localStorage.getItem('usuarioLogado')) || { nome: 'Aluno' };
+    const horario = document.getElementById('horarioRetirada').value;
+    const tipo = document.querySelector('input[name="tipoPedido"]:checked').value;
+    const pagamento = tipo === 'Compra' ? document.getElementById('formaPagamento').value : 'A combinar';
+
+    const pedidos = JSON.parse(localStorage.getItem('pedidosLanchonete')) || [];
+    const novoPedido = {
+        id: Date.now(),
+        cliente: usuarioLogado.nome,
+        itens: carrinho,
+        total: carrinho.reduce((acc, c) => acc + (c.preco * c.qtd), 0),
+        tipo: tipo,
+        horario: horario,
+        pagamento: pagamento,
+        status: 'Pendente',
+        data: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+    };
+
+    pedidos.push(novoPedido);
+    localStorage.setItem('pedidosLanchonete', JSON.stringify(pedidos));
+
+    carrinho = [];
+    atualizarCarrinho();
+
+    document.getElementById('painelCarrinho').classList.add('escondido');
+    alert('Pedido enviado com sucesso!');
+});
+
+document.getElementById('btnSair').addEventListener('click', () => {
+    localStorage.removeItem('usuarioLogado');
+    window.location.href = 'index.html';
+});
+
+carregarProdutos();
+atualizarCarrinho();
